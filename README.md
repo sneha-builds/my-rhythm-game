@@ -84,7 +84,7 @@ Controls are mapped to a standard 4-lane setup:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 Feel free to fork this repo and submit Pull Requests for new "Skins" or audio improvements. Let's build the ultimate web rhythm experience together!
 
 **Maintainer:** [Sneha Builds](https://github.com/sneha-builds)  
