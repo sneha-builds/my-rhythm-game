@@ -65,8 +65,6 @@ Controls are mapped to a standard 4-lane setup:
 * **Good:** ±40ms
 * **Miss:** >40ms or skipped note
 
----
-
 ## Roadmap
 - [x] **Rainmaker Mode:** Zen/Ambient lo-fi mode.
 - [ ] **Cyber Hacker:** Matrix-style falling code snippets.
