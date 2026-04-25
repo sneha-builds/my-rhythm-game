@@ -52,9 +52,7 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
    ```bash
    npm run dev
    ```
-
----
-
+   
 ## Gameplay Mechanics
 Controls are mapped to a standard 4-lane setup:
 * **Lane 1:** `[D]`
