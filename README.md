@@ -72,8 +72,6 @@ Controls are mapped to a standard 4-lane setup:
 - [ ] **Samurai Slash:** Horizontal silhouette combat rhythm.
 - [ ] **Custom MIDI Support:** Allow users to upload `.mid` files to generate custom levels.
 
----
-
 ## Contributing
 Feel free to fork this repo and submit Pull Requests for new "Skins" or audio improvements. Let's build the ultimate web rhythm experience together!
 
