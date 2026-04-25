@@ -16,7 +16,7 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 * **Framework:** React 18+ (Vite)
 * **Rendering:** HTML5 Canvas API
 * **Audio:** Web Audio API (Oscillator-based synthesis)
