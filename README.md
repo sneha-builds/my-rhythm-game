@@ -42,7 +42,7 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
 
 ---
 
-## 🎮 Installation & Setup
+## Installation & Setup
 
 1. **Clone the repository**
    ```bash
