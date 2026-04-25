@@ -61,7 +61,7 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
 
 ---
 
-## 🕹️ Gameplay Mechanics
+## Gameplay Mechanics
 Controls are mapped to a standard 4-lane setup:
 * **Lane 1:** `[D]`
 * **Lane 2:** `[F]`
