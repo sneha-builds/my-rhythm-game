@@ -25,7 +25,7 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```text
 /src
  ├── /components
