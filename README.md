@@ -14,8 +14,6 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
 * **Adaptive Theming:** Full support for System Light/Dark modes. Canvas colors and UI elements update dynamically via CSS variables.
 * **Multi-Mode Lobby:** A professional navigation interface to toggle between four distinct gameplay universes.
 
----
-
 ## Tech Stack
 * **Framework:** React 18+ (Vite)
 * **Rendering:** HTML5 Canvas API
