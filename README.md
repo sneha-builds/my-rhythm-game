@@ -29,7 +29,7 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
  │    ├── GameEngine.jsx     # Canvas wrapper & Game Loop
  │    └── HUD.jsx            # Score and accuracy display
  ├── /engine
- │    ├── RainLogic.js       # Rain-specific physics & visuals
+ │    ├── RainLogic.js       # Rain-specific physics & visuals 
  │    └── AudioController.js # Sound synthesis logic
  ├── /data
  │    └── level1-rain.json   # Note timestamps and lane data
