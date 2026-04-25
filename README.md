@@ -21,8 +21,6 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
 * **Styling:** Tailwind CSS & CSS Variables
 * **State:** React Hooks (useContext, useRef, useEffect)
 
----
-
 ## Project Structure
 ```text
 /src
