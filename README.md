@@ -8,7 +8,7 @@ Unlike traditional web-based games that rely on moving DOM elements, RhythmVerse
 
 The current version features the **Rainmaker** mode—a zen-like experience where you catch falling raindrops to generate lo-fi ambient melodies.
 
-## ✨ Key Features
+## Key Features
 * **Modular Game Engine:** A centralized logic controller manages timing, hit-windows, and score state independent of the visual theme.
 * **Zero-Latency Audio:** Programmatic sound synthesis via Web Audio API ensures audio-visual synchronization without the lag of traditional HTML5 audio tags.
 * **Adaptive Theming:** Full support for System Light/Dark modes. Canvas colors and UI elements update dynamically via CSS variables.
