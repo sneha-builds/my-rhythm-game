@@ -36,8 +36,6 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
  └── App.jsx                 # Theme & State routing
 ```
 
----
-
 ## Installation & Setup
 
 1. **Clone the repository**
