@@ -75,7 +75,7 @@ Controls are mapped to a standard 4-lane setup:
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 - [x] **Rainmaker Mode:** Zen/Ambient lo-fi mode.
 - [ ] **Cyber Hacker:** Matrix-style falling code snippets.
 - [ ] **Neon Highway:** 3D perspective synthwave driving mode.
