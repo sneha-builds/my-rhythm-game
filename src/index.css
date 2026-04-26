@@ -3,19 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #e2e8f0;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --accent: #6366f1;
-}
-
-.dark {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --accent: #818cf8;
+  --bg-primary: #050510;
+  --bg-secondary: #0a0a1a;
+  --text-primary: #e0e7ff;
+  --text-secondary: #818cf8;
+  --accent: #ff00ff;
+  --accent-glow: rgba(255, 0, 255, 0.6);
+  --cyan: #00ffff;
 }
 
 * {
@@ -27,12 +21,52 @@
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Orbitron', sans-serif;
+  background-image: 
+    linear-gradient(rgba(5, 5, 16, 0.9) 0%, rgba(5, 5, 16, 0.9) 100%),
+    repeating-linear-gradient(transparent, transparent 2px, rgba(255, 0, 255, 0.05) 2px, rgba(255, 0, 255, 0.05) 4px);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+}
+
+.pixel-font {
+  font-family: 'Press Start 2P', cursive;
 }
 
 #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.neon-border {
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow), inset 0 0 10px var(--accent-glow);
+}
+
+.neon-text {
+  text-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent), 0 0 20px var(--accent);
+}
+
+.cyan-neon-text {
+  color: var(--cyan);
+  text-shadow: 0 0 5px var(--cyan), 0 0 10px var(--cyan), 0 0 20px var(--cyan);
+}
+
+.glass-panel {
+  background: rgba(10, 10, 26, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 0, 255, 0.3);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 15px var(--accent-glow), inset 0 0 10px var(--accent-glow); }
+  50% { box-shadow: 0 0 30px var(--accent-glow), inset 0 0 20px var(--accent-glow); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
 }

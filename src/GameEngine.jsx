@@ -5,277 +5,385 @@ import {
   generateNoteData,
   drawRainBackground,
   drawRipple,
-  getLaneFromKey,
-  LANE_POSITIONS
+  getLaneFromKey as getRainLane,
+  RAIN_KEYS
 } from './modes/RainLogic.js';
+import {
+  HackerBit,
+  drawHackerBackground,
+  generateHackerNotes,
+  HACKER_KEYS
+} from './modes/HackerLogic.js';
+import {
+  NeonBar,
+  drawHighwayBackground,
+  generateHighwayNotes,
+  HIGHWAY_KEYS
+} from './modes/HighwayLogic.js';
+import {
+  SamuraiTarget,
+  drawSamuraiBackground,
+  generateSamuraiNotes,
+  SAMURAI_KEYS
+} from './modes/SamuraiLogic.js';
 
 const MODE_STRATEGIES = {
   RAIN: {
-    init: (canvas) => {
-      return {
-        drops: [],
-        noteData: generateNoteData(50, 4),
-        startTime: null,
-        score: 0,
-        combo: 0,
-        maxCombo: 0,
-        nextNoteIndex: 0,
-        gameStarted: false,
-        gameOver: false,
-        laneEffects: [false, false, false, false]
-      };
-    },
-    update: (ctx, state, canvas, isDark) => {
+    init: (canvas) => ({
+      items: [],
+      noteData: generateNoteData(60, 4),
+      startTime: null,
+      score: 0,
+      combo: 0,
+      maxCombo: 0,
+      nextNoteIndex: 0,
+      gameStarted: false,
+      gameOver: false,
+    }),
+    update: (ctx, state, canvas) => {
       if (!state.gameStarted || state.gameOver) return state;
-      
       const elapsed = performance.now() - state.startTime;
-      
-      while (
-        state.nextNoteIndex < state.noteData.length &&
-        state.noteData[state.nextNoteIndex].time < elapsed
-      ) {
-        const note = state.noteData[state.nextNoteIndex];
-        const drop = new Raindrop(canvas, note.lane);
-        state.drops.push(drop);
+      while (state.nextNoteIndex < state.noteData.length && state.noteData[state.nextNoteIndex].time < elapsed) {
+        state.items.push(new Raindrop(canvas, state.noteData[state.nextNoteIndex].lane));
         state.nextNoteIndex++;
       }
-      
-      state.drops = state.drops.filter(drop => {
-        drop.update();
-        return drop.active || drop.missed;
-      });
-      
-      const missedNow = state.drops.filter(d => d.missed && !d.counted);
-      if (missedNow.length > 0) {
-        missedNow.forEach(d => {
-          d.counted = true;
+      state.items = state.items.filter(item => {
+        item.update();
+        if (item.missed && !item.counted) {
+          item.counted = true;
           state.combo = 0;
-          audioEngine.playHitSound();
-        });
-      }
-      
-      state.laneEffects = state.laneEffects.map(val => val ? Math.max(0, val - 0.1) : val);
-      
+        }
+        return item.active || (item.ripple && item.ripple.alpha > 0);
+      });
+      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) state.gameOver = true;
       return state;
     },
     draw: (ctx, state, canvas, isDark) => {
       drawRainBackground(ctx, canvas, isDark);
-      
-      state.drops.forEach(drop => drop.draw(ctx));
-      
-      state.drops.forEach(drop => {
-        if (drop.ripple) {
-          drawRipple(drop.ripple, ctx);
-        }
+      state.items.forEach(item => {
+        item.draw(ctx);
+        if (item.ripple) drawRipple(item.ripple, ctx);
       });
-      
-      ctx.fillStyle = isDark ? '#f1f5f9' : '#1e293b';
-      ctx.font = 'bold 20px system-ui';
-      ctx.textAlign = 'left';
-      ctx.fillText(`Score: ${state.score}`, 20, 35);
-      ctx.fillText(`Combo: ${state.combo}`, 20, 65);
-      
-      if (state.gameOver) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 48px system-ui';
-        ctx.textAlign = 'center';
-        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
-        ctx.font = '24px system-ui';
-        ctx.fillText(`Final Score: ${state.score}`, canvas.width / 2, canvas.height / 2 + 30);
-        ctx.fillText(`Max Combo: ${state.maxCombo}`, canvas.width / 2, canvas.height / 2 + 65);
-      }
-      
-      if (!state.gameStarted) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 32px system-ui';
-        ctx.textAlign = 'center';
-        ctx.fillText('Press D, F, J, or K to Start', canvas.width / 2, canvas.height / 2);
-      }
+      drawUI(ctx, state, canvas, isDark);
     },
-    handleKey: (key, state) => {
-      const lane = getLaneFromKey(key);
+    handleKey: (key, state, canvas) => {
+      const lane = getRainLane(key);
       if (lane === null) return state;
-      
-      state.laneEffects[lane] = 1;
-      
       if (!state.gameStarted) {
-        if (lane !== null) {
-          state.gameStarted = true;
-          state.startTime = performance.now();
-          audioEngine.init();
-          audioEngine.resume();
-        }
+        state.gameStarted = true;
+        state.startTime = performance.now();
+        audioEngine.init();
         return state;
       }
-      
-      console.log('Key pressed:', key, 'Lane:', lane);
+      const hitY = canvas.height - 50;
+      const hitItem = state.items.find(item => item.active && item.lane === lane && Math.abs(item.y - hitY) < 60);
+      if (hitItem) {
+        hitItem.hit();
+        state.score += 100 + state.combo * 10;
+        state.combo++;
+        state.maxCombo = Math.max(state.combo, state.maxCombo);
+      } else {
+        state.combo = 0;
+        audioEngine.playHitSound();
+      }
       return state;
     }
   },
   HACKER: {
-    init: () => ({ message: 'Hacker Mode - Coming Soon' }),
-    draw: (ctx, canvas, isDark) => {
-      ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = isDark ? '#f1f5f9' : '#1e293b';
-      ctx.font = 'bold 32px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('Hacker Mode', canvas.width / 2, canvas.height / 2 - 20);
-      ctx.font = '18px system-ui';
-      ctx.fillText('Coming Soon', canvas.width / 2, canvas.height / 2 + 25);
+    init: (canvas) => ({
+      items: [],
+      noteData: generateHackerNotes(80),
+      startTime: null,
+      score: 0,
+      combo: 0,
+      maxCombo: 0,
+      nextNoteIndex: 0,
+      gameStarted: false,
+      gameOver: false,
+    }),
+    update: (ctx, state, canvas) => {
+      if (!state.gameStarted || state.gameOver) return state;
+      const elapsed = performance.now() - state.startTime;
+      while (state.nextNoteIndex < state.noteData.length && state.noteData[state.nextNoteIndex].time < elapsed) {
+        state.items.push(new HackerBit(canvas, state.noteData[state.nextNoteIndex].lane));
+        state.nextNoteIndex++;
+      }
+      state.items = state.items.filter(item => {
+        item.update();
+        if (item.missed && !item.counted) {
+          item.counted = true;
+          state.combo = 0;
+        }
+        return item.active || item.hitEffect > 0;
+      });
+      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) state.gameOver = true;
+      return state;
     },
-    handleKey: () => {}
+    draw: (ctx, state, canvas, isDark) => {
+      drawHackerBackground(ctx, canvas);
+      state.items.forEach(item => item.draw(ctx));
+      drawUI(ctx, state, canvas, true);
+    },
+    handleKey: (key, state, canvas) => {
+      const lane = HACKER_KEYS.indexOf(key);
+      if (lane === -1) return state;
+      if (!state.gameStarted) {
+        state.gameStarted = true;
+        state.startTime = performance.now();
+        audioEngine.init();
+        return state;
+      }
+      const hitY = canvas.height - 50;
+      const hitItem = state.items.find(item => item.active && item.lane === lane && Math.abs(item.y - hitY) < 50);
+      if (hitItem) {
+        hitItem.hit();
+        state.score += 150 + state.combo * 15;
+        state.combo++;
+        state.maxCombo = Math.max(state.combo, state.maxCombo);
+      } else {
+        state.combo = 0;
+        audioEngine.playHitSound();
+      }
+      return state;
+    }
   },
   HIGHWAY: {
-    init: () => ({ message: 'Highway Mode - Coming Soon' }),
-    draw: (ctx, canvas, isDark) => {
-      ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = isDark ? '#f1f5f9' : '#1e293b';
-      ctx.font = 'bold 32px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('Neon Highway Mode', canvas.width / 2, canvas.height / 2 - 20);
-      ctx.font = '18px system-ui';
-      ctx.fillText('Coming Soon', canvas.width / 2, canvas.height / 2 + 25);
+    init: (canvas) => ({
+      items: [],
+      noteData: generateHighwayNotes(100),
+      startTime: null,
+      score: 0,
+      combo: 0,
+      maxCombo: 0,
+      nextNoteIndex: 0,
+      gameStarted: false,
+      gameOver: false,
+    }),
+    update: (ctx, state, canvas) => {
+      if (!state.gameStarted || state.gameOver) return state;
+      const elapsed = performance.now() - state.startTime;
+      while (state.nextNoteIndex < state.noteData.length && state.noteData[state.nextNoteIndex].time < elapsed) {
+        state.items.push(new NeonBar(canvas, state.noteData[state.nextNoteIndex].lane));
+        state.nextNoteIndex++;
+      }
+      state.items = state.items.filter(item => {
+        item.update();
+        if (item.missed && !item.counted) {
+          item.counted = true;
+          state.combo = 0;
+        }
+        return item.active;
+      });
+      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) state.gameOver = true;
+      return state;
     },
-    handleKey: () => {}
+    draw: (ctx, state, canvas, isDark) => {
+      drawHighwayBackground(ctx, canvas);
+      state.items.forEach(item => item.draw(ctx, canvas));
+      drawUI(ctx, state, canvas, true);
+    },
+    handleKey: (key, state, canvas) => {
+      const lane = HIGHWAY_KEYS.indexOf(key);
+      if (lane === -1) return state;
+      if (!state.gameStarted) {
+        state.gameStarted = true;
+        state.startTime = performance.now();
+        audioEngine.init();
+        return state;
+      }
+      const hitItem = state.items.find(item => item.active && item.lane === lane && item.z > 0.8 && item.z < 1.05);
+      if (hitItem) {
+        hitItem.hit();
+        state.score += 200 + state.combo * 20;
+        state.combo++;
+        state.maxCombo = Math.max(state.combo, state.maxCombo);
+      } else {
+        state.combo = 0;
+        audioEngine.playHitSound();
+      }
+      return state;
+    }
   },
   SAMURAI: {
-    init: () => ({ message: 'Samurai Mode - Coming Soon' }),
-    draw: (ctx, canvas, isDark) => {
-      ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = isDark ? '#f1f5f9' : '#1e293b';
-      ctx.font = 'bold 32px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('Samurai Slash Mode', canvas.width / 2, canvas.height / 2 - 20);
-      ctx.font = '18px system-ui';
-      ctx.fillText('Coming Soon', canvas.width / 2, canvas.height / 2 + 25);
+    init: (canvas) => ({
+      items: [],
+      noteData: generateSamuraiNotes(50),
+      startTime: null,
+      score: 0,
+      combo: 0,
+      maxCombo: 0,
+      nextNoteIndex: 0,
+      gameStarted: false,
+      gameOver: false,
+    }),
+    update: (ctx, state, canvas) => {
+      if (!state.gameStarted || state.gameOver) return state;
+      const elapsed = performance.now() - state.startTime;
+      while (state.nextNoteIndex < state.noteData.length && state.noteData[state.nextNoteIndex].time < elapsed) {
+        state.items.push(new SamuraiTarget(canvas, state.noteData[state.nextNoteIndex].lane));
+        state.nextNoteIndex++;
+      }
+      state.items = state.items.filter(item => {
+        item.update();
+        if (item.missed && !item.counted) {
+          item.counted = true;
+          state.combo = 0;
+        }
+        return item.active || item.sliced;
+      });
+      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) state.gameOver = true;
+      return state;
     },
-    handleKey: () => {}
+    draw: (ctx, state, canvas, isDark) => {
+      drawSamuraiBackground(ctx, canvas);
+      state.items.forEach(item => item.draw(ctx));
+      drawUI(ctx, state, canvas, true);
+    },
+    handleKey: (key, state, canvas) => {
+      const lane = SAMURAI_KEYS.indexOf(key);
+      if (lane === -1) return state;
+      if (!state.gameStarted) {
+        state.gameStarted = true;
+        state.startTime = performance.now();
+        audioEngine.init();
+        return state;
+      }
+      const targetX = lane === 0 ? canvas.width * 0.3 : canvas.width * 0.7;
+      const hitItem = state.items.find(item => item.active && item.side === lane && Math.abs(item.x - targetX) < 60);
+      if (hitItem) {
+        hitItem.hit();
+        state.score += 300 + state.combo * 30;
+        state.combo++;
+        state.maxCombo = Math.max(state.combo, state.maxCombo);
+      } else {
+        state.combo = 0;
+        audioEngine.playHitSound();
+      }
+      return state;
+    }
   }
 };
+
+function drawUI(ctx, state, canvas, isDark) {
+  ctx.fillStyle = '#00ffff';
+  ctx.font = '20px "Orbitron", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = '#00ffff';
+  ctx.fillText(`SCORE: ${state.score}`, 20, 35);
+  
+  ctx.fillStyle = '#ff00ff';
+  ctx.shadowColor = '#ff00ff';
+  ctx.fillText(`COMBO: ${state.combo}`, 20, 65);
+  ctx.shadowBlur = 0;
+
+  if (state.gameOver) {
+    ctx.fillStyle = 'rgba(5, 5, 16, 0.85)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = '#ff00ff';
+    ctx.textAlign = 'center';
+    ctx.font = '40px "Press Start 2P", cursive';
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#ff00ff';
+    ctx.fillText('STAGE CLEAR', canvas.width / 2, canvas.height / 2 - 40);
+    
+    ctx.fillStyle = '#00ffff';
+    ctx.shadowColor = '#00ffff';
+    ctx.font = '20px "Press Start 2P", cursive';
+    ctx.fillText(`SCORE: ${state.score}`, canvas.width / 2, canvas.height / 2 + 30);
+    ctx.fillText(`MAX COMBO: ${state.maxCombo}`, canvas.width / 2, canvas.height / 2 + 70);
+    ctx.shadowBlur = 0;
+  }
+
+  if (!state.gameStarted) {
+    ctx.fillStyle = 'rgba(5, 5, 16, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = '#00ffff';
+    ctx.font = '24px "Orbitron", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#00ffff';
+    
+    let msg = 'PRESS ANY LANE KEY TO START';
+    if (state.mode === 'RAIN') msg = 'PRESS D, F, J, OR K TO START';
+    if (state.mode === 'HACKER') msg = 'PRESS A, S, K, OR L TO START';
+    if (state.mode === 'HIGHWAY') msg = 'PRESS 1, 2, 3, OR 4 TO START';
+    if (state.mode === 'SAMURAI') msg = 'PRESS F OR J TO START';
+    
+    ctx.fillText(msg, canvas.width / 2, canvas.height / 2);
+    ctx.shadowBlur = 0;
+  }
+}
 
 export default function GameEngine({ mode, onBack }) {
   const canvasRef = useRef(null);
   const stateRef = useRef(null);
-  const strategyRef = useRef(null);
   const rafRef = useRef(null);
-  const isDarkRef = useRef(false);
-
-  const checkMatch = useCallback((lane) => {
-    if (!stateRef.current || !stateRef.current.gameStarted) return;
-    
-    const state = stateRef.current;
-    const threshold = 50;
-    const hitY = canvasRef.current.height - 50;
-    
-    let closestDrop = null;
-    let closestDist = Infinity;
-    
-    state.drops.forEach(drop => {
-      if (drop.active && drop.lane === lane) {
-        const dist = Math.abs(drop.y - hitY);
-        if (dist < closestDist && dist < threshold) {
-          closestDist = dist;
-          closestDrop = drop;
-        }
-      }
-    });
-    
-    if (closestDrop) {
-      closestDrop.hit();
-      state.score += 100 + state.combo * 10;
-      state.combo++;
-      if (state.combo > state.maxCombo) {
-        state.maxCombo = state.combo;
-      }
-    } else {
-      state.combo = 0;
-      audioEngine.playHitSound();
-    }
-  }, []);
+  const isDarkRef = useRef(true);
 
   const handleKeyDown = useCallback((e) => {
     const key = e.key.toLowerCase();
-    if (strategyRef.current && strategyRef.current.handleKey) {
-      const newState = strategyRef.current.handleKey(key, stateRef.current);
-      if (newState) {
-        stateRef.current = newState;
-      }
+    const strategy = MODE_STRATEGIES[mode];
+    if (strategy && strategy.handleKey) {
+      stateRef.current = strategy.handleKey(key, stateRef.current, canvasRef.current);
     }
-    
-    checkMatch(getLaneFromKey(key));
-  }, [checkMatch]);
+  }, [mode]);
 
   useEffect(() => {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    isDarkRef.current = prefersDark;
-    
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e) => {
-      isDarkRef.current = e.matches;
-    };
-    mediaQuery.addEventListener('change', handleChange);
+    isDarkRef.current = true;
     
     const strategy = MODE_STRATEGIES[mode] || MODE_STRATEGIES.RAIN;
-    strategyRef.current = strategy;
     stateRef.current = strategy.init(canvasRef.current);
+    stateRef.current.mode = mode;
     
     window.addEventListener('keydown', handleKeyDown);
     
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    const gameLoop = () => {
-      const isDark = isDarkRef.current;
+    // Ensure font is loaded before first draw
+    document.fonts.ready.then(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
       
-      if (strategyRef.current.update) {
-        stateRef.current = strategyRef.current.update(
-          ctx,
-          stateRef.current,
-          canvas,
-          isDark
-        );
-      }
-      
-      if (strategyRef.current.draw) {
-        strategyRef.current.draw(ctx, stateRef.current, canvas, isDark);
-      }
+      const gameLoop = () => {
+        const isDark = isDarkRef.current;
+        stateRef.current = strategy.update(ctx, stateRef.current, canvas, isDark);
+        strategy.draw(ctx, stateRef.current, canvas, isDark);
+        rafRef.current = requestAnimationFrame(gameLoop);
+      };
       
       rafRef.current = requestAnimationFrame(gameLoop);
-    };
-    
-    rafRef.current = requestAnimationFrame(gameLoop);
-    
+    });
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      mediaQuery.removeEventListener('change', handleChange);
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
+      cancelAnimationFrame(rafRef.current);
     };
   }, [mode, handleKeyDown]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <canvas
-        ref={canvasRef}
-        width={800}
-        height={600}
-        className="border-2 border-[var(--accent)] rounded-lg"
-        style={{ maxWidth: '100%', height: 'auto' }}
-      />
-      <button
-        onClick={onBack}
-        className="mt-4 px-6 py-2 bg-[var(--accent)] text-white rounded-lg hover:opacity-90 transition-opacity"
-      >
-        Back to Lobby
-      </button>
+    <div className="flex flex-col items-center justify-center min-h-screen relative p-4">
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-fuchsia-900/10 to-transparent pointer-events-none" />
+      
+      <div className="z-10 flex flex-col items-center">
+        <div className="p-2 glass-panel rounded-2xl neon-border animate-pulse-glow bg-[#050510]">
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={600}
+            className="rounded-xl block"
+            style={{ maxWidth: '100%', height: 'auto', backgroundColor: '#050510' }}
+          />
+        </div>
+        
+        <button
+          onClick={onBack}
+          className="mt-8 px-8 py-3 bg-transparent border-2 border-cyan-400 text-cyan-400 font-bold font-mono tracking-widest rounded hover:bg-cyan-400/20 hover:shadow-[0_0_15px_rgba(0,255,255,0.5)] transition-all uppercase"
+        >
+          [ ABORT MISSION ]
+        </button>
+      </div>
     </div>
   );
 }

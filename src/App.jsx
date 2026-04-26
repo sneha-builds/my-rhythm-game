@@ -25,10 +25,6 @@ export default function App() {
   }, [gameState]);
 
   const handleSelectMode = (mode) => {
-    if (mode === 'HACKER' || mode === 'HIGHWAY' || mode === 'SAMURAI') {
-      alert(`${mode} mode is not yet implemented. Please try Rainmaker!`);
-      return;
-    }
     setSelectedMode(mode);
     setGameState(GAME_STATES.PLAYING);
   };

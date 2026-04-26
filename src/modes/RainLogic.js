@@ -10,7 +10,7 @@ export class Raindrop {
     this.lane = lane;
     this.x = canvas.width * LANE_POSITIONS[lane];
     this.y = -50;
-    this.speed = 4 + Math.random() * 2;
+    this.speed = 2.5 + Math.random() * 1.5; // Slower speed
     this.radius = 15;
     this.active = true;
     this.missed = false;
