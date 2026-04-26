@@ -60,14 +60,6 @@ export function drawHighwayBackground(ctx, canvas) {
   const centerX = canvas.width / 2;
   const horizonY = canvas.height * 0.3;
   
-  // Grid lines
-  ctx.strokeStyle = 'rgba(255, 0, 255, 0.2)';
-  ctx.lineWidth = 1;
-  for(let i=0; i<10; i++) {
-    const y = horizonY + (canvas.height - horizonY) * (i/10);
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-  }
-
   // Perspective lanes
   ctx.strokeStyle = '#00ffff';
   ctx.lineWidth = 2;
@@ -77,14 +69,18 @@ export function drawHighwayBackground(ctx, canvas) {
     ctx.beginPath(); ctx.moveTo(xTop, horizonY); ctx.lineTo(xBottom, canvas.height); ctx.stroke();
   }
 
-  // Hit zone
-  const hitZ = 0.9;
-  const hitY = horizonY + (canvas.height - horizonY) * hitZ;
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 4;
-  ctx.shadowBlur = 10; ctx.shadowColor = '#fff';
-  ctx.beginPath(); ctx.moveTo(0, hitY); ctx.lineTo(canvas.width, hitY); ctx.stroke();
-  ctx.shadowBlur = 0;
+  // Hit zone (Belt)
+  const hitZStart = 0.85;
+  const hitZEnd = 0.95;
+  const hitYStart = horizonY + (canvas.height - horizonY) * hitZStart;
+  const hitYEnd = horizonY + (canvas.height - horizonY) * hitZEnd;
+  
+  ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+  ctx.fillRect(0, hitYStart, canvas.width, hitYEnd - hitYStart);
+  
+  ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(0, hitYStart, canvas.width, hitYEnd - hitYStart);
 
   HIGHWAY_KEYS.forEach((key, i) => {
     const x = centerX + (i - 1.5) * 300;

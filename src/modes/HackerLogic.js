@@ -72,17 +72,28 @@ export function drawHackerBackground(ctx, canvas) {
     ctx.stroke();
   }
 
-  const hitY = canvas.height - 100;
+  const hitZoneY = canvas.height - 120;
+  const hitZoneHeight = 60;
+  
   ctx.fillStyle = 'rgba(0, 255, 65, 0.1)';
-  ctx.fillRect(0, hitY, canvas.width, 100);
+  ctx.fillRect(0, hitZoneY, canvas.width, hitZoneHeight);
+  
+  ctx.strokeStyle = 'rgba(0, 255, 65, 0.5)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(0, hitZoneY, canvas.width, hitZoneHeight);
+
   ctx.strokeStyle = '#00ff41';
-  ctx.strokeRect(0, hitY, canvas.width, 1);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, hitZoneY + hitZoneHeight/2);
+  ctx.lineTo(canvas.width, hitZoneY + hitZoneHeight/2);
+  ctx.stroke();
 
   HACKER_KEYS.forEach((key, i) => {
     ctx.fillStyle = '#00ff41';
     ctx.font = '14px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(`[${key.toUpperCase()}]`, i * laneWidth + laneWidth/2, canvas.height - 20);
+    ctx.fillText(`[${key.toUpperCase()}]`, i * laneWidth + laneWidth/2, canvas.height - 15);
   });
 }
 

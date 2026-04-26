@@ -76,16 +76,19 @@ export function drawSamuraiBackground(ctx, canvas) {
   ctx.fillStyle = '#e74c3c';
   ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height * 0.3, 80, 0, Math.PI * 2); ctx.fill();
 
-  // Hit zone line
-  const hitY = canvas.height * 0.8;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  // Hit zone (Enhanced Belt)
+  const hitY = canvas.height * 0.75;
+  const hitHeight = 60;
+  
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.fillRect(0, hitY, canvas.width, hitHeight);
+  
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.lineWidth = 2;
-  ctx.setLineDash([10, 10]);
-  ctx.beginPath(); ctx.moveTo(0, hitY); ctx.lineTo(canvas.width, hitY); ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.strokeRect(0, hitY, canvas.width, hitHeight);
 
   // Lane guides
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
   ctx.fillRect(canvas.width * 0.05, 0, canvas.width * 0.4, canvas.height);
   ctx.fillRect(canvas.width * 0.55, 0, canvas.width * 0.4, canvas.height);
 

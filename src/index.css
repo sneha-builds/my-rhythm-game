@@ -36,10 +36,17 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Press Start 2P', cursive;
 }
 
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+.game-container {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 4 / 3;
+  position: relative;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+  image-rendering: pixelated; /* Sharpness on high-res */
 }
 
 .neon-border {

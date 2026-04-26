@@ -83,16 +83,25 @@ export function drawRainBackground(ctx, canvas) {
     ctx.stroke();
   }
   
-  // Hit Zone (Bottom Bar)
-  const hitY = canvas.height - 100;
-  ctx.fillStyle = 'rgba(99, 102, 241, 0.2)';
-  ctx.fillRect(0, hitY, canvas.width, 100);
+  // Hit Zone (Enhanced)
+  const hitZoneY = canvas.height - 120;
+  const hitZoneHeight = 60; // Thicker zone
   
+  // Outer glow for hit zone
+  ctx.fillStyle = 'rgba(99, 102, 241, 0.1)';
+  ctx.fillRect(0, hitZoneY, canvas.width, hitZoneHeight);
+  
+  // Top and bottom borders of hit zone
+  ctx.strokeStyle = 'rgba(99, 102, 241, 0.5)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(0, hitZoneY, canvas.width, hitZoneHeight);
+
+  // Center "Perfect" line
   ctx.strokeStyle = '#6366f1';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(0, hitY);
-  ctx.lineTo(canvas.width, hitY);
+  ctx.moveTo(0, hitZoneY + hitZoneHeight/2);
+  ctx.lineTo(canvas.width, hitZoneY + hitZoneHeight/2);
   ctx.stroke();
 
   // Lane Keys
@@ -100,7 +109,7 @@ export function drawRainBackground(ctx, canvas) {
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 20px "Orbitron", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(RAIN_KEYS[i].toUpperCase(), i * laneWidth + laneWidth/2, canvas.height - 30);
+    ctx.fillText(RAIN_KEYS[i].toUpperCase(), i * laneWidth + laneWidth/2, canvas.height - 20);
   }
 }
 
