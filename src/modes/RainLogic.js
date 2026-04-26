@@ -2,131 +2,115 @@ import audioEngine from '../AudioEngine.js';
 
 export const RAIN_LANE_COLORS = ['#6366f1', '#ec4899', '#14b8a6', '#f59e0b'];
 export const RAIN_KEYS = ['d', 'f', 'j', 'k'];
-export const LANE_POSITIONS = [0.2, 0.4, 0.6, 0.8];
+export const LANE_COUNT = 4;
 
-export class Raindrop {
+export class RainTile {
   constructor(canvas, lane) {
     this.canvas = canvas;
     this.lane = lane;
-    this.x = canvas.width * LANE_POSITIONS[lane];
-    this.y = -50;
-    this.speed = 2.5 + Math.random() * 1.5; // Slower speed
-    this.radius = 15;
+    this.width = canvas.width / LANE_COUNT;
+    this.height = 80; // Rectangular tile
+    this.x = lane * this.width;
+    this.y = -this.height;
+    this.speed = 3.5; 
     this.active = true;
     this.missed = false;
-    this.ripple = null;
+    this.hitEffect = 0;
   }
 
   update() {
-    if (!this.active) return;
+    if (!this.active) {
+      if (this.hitEffect > 0) this.hitEffect -= 0.1;
+      return;
+    }
     this.y += this.speed;
     
-    if (this.y > this.canvas.height - 60) {
+    // If it passes the hit zone (bottom)
+    if (this.y > this.canvas.height) {
       this.missed = true;
       this.active = false;
-    }
-    
-    if (this.ripple) {
-      this.ripple.radius += 2;
-      this.ripple.alpha -= 0.03;
-      if (this.ripple.alpha <= 0) {
-        this.ripple = null;
-      }
     }
   }
 
   draw(ctx) {
-    if (!this.active && !this.ripple) return;
-    
-    const gradient = ctx.createLinearGradient(
-      this.x - this.radius, this.y,
-      this.x + this.radius, this.y + this.radius * 2
-    );
-    gradient.addColorStop(0, RAIN_LANE_COLORS[this.lane]);
-    gradient.addColorStop(1, 'rgba(99, 102, 241, 0.3)');
-    
-    ctx.beginPath();
-    ctx.ellipse(this.x, this.y, this.radius, this.radius * 1.5, 0, 0, Math.PI * 2);
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius * 0.5, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.fill();
+    if (!this.active && this.hitEffect <= 0) return;
+
+    if (this.active) {
+      // Draw Tile
+      const gradient = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
+      gradient.addColorStop(0, RAIN_LANE_COLORS[this.lane]);
+      gradient.addColorStop(1, '#000000');
+      
+      ctx.fillStyle = gradient;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.fillRect(this.x + 2, this.y, this.width - 4, this.height);
+      ctx.strokeRect(this.x + 2, this.y, this.width - 4, this.height);
+      
+      // Glow
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = RAIN_LANE_COLORS[this.lane];
+      ctx.strokeRect(this.x + 2, this.y, this.width - 4, this.height);
+      ctx.shadowBlur = 0;
+    }
+
+    if (this.hitEffect > 0) {
+      ctx.fillStyle = `rgba(255, 255, 255, ${this.hitEffect})`;
+      ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
   }
 
   hit() {
     this.active = false;
-    this.ripple = {
-      x: this.x,
-      y: this.canvas.height - 50,
-      radius: 10,
-      alpha: 1
-    };
+    this.hitEffect = 1;
     audioEngine.playRainPlink(this.lane);
   }
-
-  getLane() {
-    return this.lane;
-  }
 }
 
-export function generateNoteData(count = 50, lanes = 4) {
-  const data = [];
-  const beatInterval = 800;
-  
-  for (let i = 0; i < count; i++) {
-    const lane = Math.floor(Math.random() * lanes);
-    const time = 1000 + i * beatInterval + Math.random() * 200;
-    data.push({ lane, time, hit: false });
-  }
-  
-  return data.sort((a, b) => a.time - b.time);
-}
-
-export function drawRainBackground(ctx, canvas, isDark) {
-  ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
+export function drawRainBackground(ctx, canvas) {
+  ctx.fillStyle = '#050510';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(100, 116, 139, 0.1)';
-  ctx.lineWidth = 1;
+  const laneWidth = canvas.width / LANE_COUNT;
   
-  for (let i = 0; i < 4; i++) {
-    const x = canvas.width * LANE_POSITIONS[i];
+  // Lane Dividers
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < LANE_COUNT; i++) {
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, canvas.height);
+    ctx.moveTo(i * laneWidth, 0);
+    ctx.lineTo(i * laneWidth, canvas.height);
     ctx.stroke();
   }
   
-  ctx.fillStyle = isDark ? 'rgba(99, 102, 241, 0.8)' : 'rgba(99, 102, 241, 0.6)';
-  const hitY = canvas.height - 50;
+  // Hit Zone (Bottom Bar)
+  const hitY = canvas.height - 100;
+  ctx.fillStyle = 'rgba(99, 102, 241, 0.2)';
+  ctx.fillRect(0, hitY, canvas.width, 100);
   
-  for (let i = 0; i < 4; i++) {
-    const x = canvas.width * LANE_POSITIONS[i];
-    ctx.beginPath();
-    ctx.arc(x, hitY, 25, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
-    ctx.font = 'bold 14px system-ui';
+  ctx.strokeStyle = '#6366f1';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, hitY);
+  ctx.lineTo(canvas.width, hitY);
+  ctx.stroke();
+
+  // Lane Keys
+  for (let i = 0; i < LANE_COUNT; i++) {
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 20px "Orbitron", sans-serif';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(RAIN_KEYS[i].toUpperCase(), x, hitY);
-    
-    ctx.fillStyle = isDark ? 'rgba(99, 102, 241, 0.8)' : 'rgba(99, 102, 241, 0.6)';
+    ctx.fillText(RAIN_KEYS[i].toUpperCase(), i * laneWidth + laneWidth/2, canvas.height - 30);
   }
 }
 
-export function drawRipple(ripple, ctx) {
-  if (!ripple || ripple.alpha <= 0) return;
-  
-  ctx.beginPath();
-  ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
-  ctx.strokeStyle = `rgba(99, 102, 241, ${ripple.alpha})`;
-  ctx.lineWidth = 2;
-  ctx.stroke();
+export function generateNoteData(count = 60) {
+  const data = [];
+  const interval = 800;
+  for (let i = 0; i < count; i++) {
+    data.push({ lane: Math.floor(Math.random() * 4), time: 1000 + i * interval });
+  }
+  return data;
 }
 
 export function getLaneFromKey(key) {
