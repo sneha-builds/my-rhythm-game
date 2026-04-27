@@ -2,9 +2,9 @@ class AudioEngine {
   constructor() {
     this.ctx = null;
     this.masterGain = null;
-    this.bgmNodes = []; 
     this.initialized = false;
-    this.isPlaying = false;
+    this.currentLoop = null;
+    this.notes = [];
   }
 
   init() {
@@ -25,166 +25,107 @@ class AudioEngine {
   startBGM(mode) {
     if (!this.initialized) this.init();
     this.stopBGM();
-    const now = this.ctx.currentTime;
-    const bgmGain = this.ctx.createGain();
-    bgmGain.gain.value = 0.08; 
+    this.resume();
 
-    const createOsc = (freq, type, detune = 0) => {
-      const osc = this.ctx.createOscillator();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, now);
-      osc.detune.setValueAtTime(detune, now);
-      osc.connect(bgmGain);
-      osc.start();
-      return osc;
-    };
+    const bpm = 120;
+    const noteLength = 60 / bpm; // 0.5s for quarter note
+    let sequence = [];
+    let instrumentType = 'sine';
 
     switch(mode) {
-      case 'RAIN': 
-        this.bgmNodes.push(createOsc(55, 'sine'));
-        this.bgmNodes.push(createOsc(55.5, 'triangle', 10));
-        this.addLFO(bgmGain.gain, 0.5, 0.03); 
+      case 'RAIN': // Taylor Swift Vibe (Acoustic Arpeggio)
+        instrumentType = 'sine';
+        sequence = [261.63, 329.63, 392.00, 440.00]; // C4, E4, G4, A4 (Soft Pop)
+        this.playArtistLoop(sequence, instrumentType, noteLength, 0.1, 0.4);
         break;
-      case 'HACKER': 
-        this.bgmNodes.push(createOsc(40, 'square'));
-        this.bgmNodes.push(createOsc(40.2, 'square', 15));
-        this.addLFO(bgmGain.gain, 4, 0.05); 
+
+      case 'HACKER': // BTS Vibe (Disco Pop Pulse)
+        instrumentType = 'square';
+        sequence = [196.00, 196.00, 261.63, 220.00]; // G3, G3, C4, A3 (Snappy)
+        this.playArtistLoop(sequence, instrumentType, noteLength / 2, 0.05, 0.2);
         break;
-      case 'HIGHWAY': 
-        this.bgmNodes.push(createOsc(80, 'sawtooth'));
-        this.bgmNodes.push(createOsc(80.5, 'sawtooth', 20));
-        this.bgmNodes.push(createOsc(160, 'sawtooth', -10));
-        this.addLFO(bgmGain.gain, 8, 0.04); 
+
+      case 'HIGHWAY': // The Weeknd Vibe (80s Synthwave Bass)
+        instrumentType = 'sawtooth';
+        sequence = [110.00, 110.00, 130.81, 146.83]; // A2, A2, C3, D3 (Driving)
+        this.playArtistLoop(sequence, instrumentType, noteLength, 0.15, 0.3);
         break;
-      case 'SAMURAI': 
-        this.bgmNodes.push(createOsc(45, 'sawtooth'));
-        this.bgmNodes.push(createOsc(45.5, 'triangle', 15));
-        this.bgmNodes.push(createOsc(440, 'sine', 5)); 
-        this.addLFO(bgmGain.gain, 1.5, 0.06); 
+
+      case 'SAMURAI': // Selena Gomez Vibe (Moody Ambient Pop)
+        instrumentType = 'triangle';
+        sequence = [174.61, 130.81, 146.83, 110.00]; // F3, C3, D3, A2 (Smooth)
+        this.playArtistLoop(sequence, instrumentType, noteLength * 2, 0.2, 0.4);
         break;
     }
-
-    bgmGain.connect(this.masterGain);
-    this.isPlaying = true;
   }
 
-  addLFO(target, rate, depth) {
-    const lfo = this.ctx.createOscillator();
-    const lfoGain = this.ctx.createGain();
-    lfo.frequency.value = rate;
-    lfoGain.gain.value = depth;
-    lfo.connect(lfoGain);
-    lfoGain.connect(target);
-    lfo.start();
-    this.bgmNodes.push(lfo);
+  playArtistLoop(sequence, type, stepTime, gainVal, decay) {
+    let step = 0;
+    const playStep = () => {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      
+      osc.type = type;
+      osc.frequency.setValueAtTime(sequence[step % sequence.length], now);
+      
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(gainVal, now + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, now + decay);
+      
+      osc.connect(g);
+      g.connect(this.masterGain);
+      
+      osc.start(now);
+      osc.stop(now + decay);
+      this.notes.push(osc);
+      
+      step++;
+    };
+
+    playStep();
+    this.currentLoop = setInterval(playStep, stepTime * 1000);
   }
 
   stopBGM() {
-    this.bgmNodes.forEach(node => {
-      try { node.stop(); } catch(e) {}
-      node.disconnect();
-    });
-    this.bgmNodes = [];
-    this.isPlaying = false;
+    if (this.currentLoop) {
+      clearInterval(this.currentLoop);
+      this.currentLoop = null;
+    }
+    this.notes.forEach(n => { try { n.stop(); } catch(e) {} });
+    this.notes = [];
   }
 
-  // --- NEW ENHANCED HIT SOUNDS ---
-
-  // A crystal-clear "Ting" sound for Rain Tiles
+  // Enhanced Hit Sounds
   playRainPlink(lane) {
-    if (!this.initialized) this.init();
-    const now = this.ctx.currentTime;
-    const freqs = [523.25, 587.33, 659.25, 698.46]; // High C, D, E, F
-    
-    // Fundamental tone
-    const osc = this.ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freqs[lane], now);
-    
-    // Sharp attack component (the "click")
-    const click = this.ctx.createOscillator();
-    click.type = 'triangle';
-    click.frequency.setValueAtTime(freqs[lane] * 2, now);
-    
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.4, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-    
-    osc.connect(gain);
-    click.connect(gain);
-    gain.connect(this.masterGain);
-    
-    osc.start();
-    click.start();
-    osc.stop(now + 0.4);
-    click.stop(now + 0.1);
+    this.playTone([523.25, 587.33, 659.25, 698.46][lane], 'sine', 0.4, 0.3);
   }
 
-  // A clean, digital "Chime" for Hacker/Highway
   playSynthBeep(note = 0) {
-    if (!this.initialized) this.init();
-    const now = this.ctx.currentTime;
-    const freq = 440 * Math.pow(2, note / 12);
-    
-    const osc = this.ctx.createOscillator();
-    osc.type = 'triangle'; // Softer than sawtooth
-    osc.frequency.setValueAtTime(freq, now);
-    
-    const sub = this.ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.setValueAtTime(freq / 2, now);
-    
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-    
-    osc.connect(gain);
-    sub.connect(gain);
-    gain.connect(this.masterGain);
-    
-    osc.start();
-    sub.start();
-    osc.stop(now + 0.2);
-    sub.stop(now + 0.2);
+    this.playTone(440 * Math.pow(2, note / 12), 'triangle', 0.3, 0.2);
   }
 
-  // A satisfying "Slash/Impact" for Samurai
   playHitSound() {
+    this.playTone(150, 'triangle', 0.5, 0.15, true); // Percussive thud
+  }
+
+  playTone(freq, type, volume, decay, sweep = false) {
     if (!this.initialized) this.init();
     const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
     
-    // White noise for the "brush/slash" effect
-    const bufferSize = this.ctx.sampleRate * 0.1;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (sweep) osc.frequency.exponentialRampToValueAtTime(40, now + decay);
     
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
+    g.gain.setValueAtTime(volume, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + decay);
     
-    const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.2, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-    
-    // Low punchy sine sweep
-    const punch = this.ctx.createOscillator();
-    punch.frequency.setValueAtTime(200, now);
-    punch.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-    
-    const punchGain = this.ctx.createGain();
-    punchGain.gain.setValueAtTime(0.5, now);
-    punchGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-    
-    noise.connect(noiseGain);
-    noiseGain.connect(this.masterGain);
-    punch.connect(punchGain);
-    punchGain.connect(this.masterGain);
-    
-    noise.start();
-    punch.start();
-    noise.stop(now + 0.1);
-    punch.stop(now + 0.15);
+    osc.connect(g);
+    g.connect(this.masterGain);
+    osc.start();
+    osc.stop(now + decay);
   }
 
   setVolume(val) {
