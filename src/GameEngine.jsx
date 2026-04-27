@@ -44,7 +44,10 @@ const MODE_STRATEGIES = {
         return item.active || item.hitEffect > 0;
       });
       state.judgments = state.judgments.filter(j => { j.alpha -= 0.02; j.y -= 1; return j.alpha > 0; });
-      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) state.gameOver = true;
+      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) {
+        state.gameOver = true;
+        audioEngine.stopBGM();
+      }
       return state;
     },
     draw: (ctx, state, canvas) => {
@@ -59,7 +62,12 @@ const MODE_STRATEGIES = {
     handleKey: (key, state, canvas) => {
       const lane = getRainLane(key);
       if (lane === null) return state;
-      if (!state.gameStarted) { state.gameStarted = true; state.startTime = performance.now(); audioEngine.init(); return state; }
+      if (!state.gameStarted) { 
+        state.gameStarted = true; state.startTime = performance.now(); 
+        audioEngine.init(); 
+        audioEngine.startBGM('RAIN');
+        return state; 
+      }
       const hitZoneY = canvas.height - 120;
       const hitZoneHeight = 60;
       const hitItem = state.items.find(item => item.active && item.lane === lane && item.y + item.height > hitZoneY && item.y < hitZoneY + hitZoneHeight);
@@ -90,7 +98,10 @@ const MODE_STRATEGIES = {
         return item.active || item.hitEffect > 0;
       });
       state.judgments = state.judgments.filter(j => { j.alpha -= 0.02; j.y -= 1; return j.alpha > 0; });
-      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) state.gameOver = true;
+      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) {
+        state.gameOver = true;
+        audioEngine.stopBGM();
+      }
       return state;
     },
     draw: (ctx, state, canvas) => {
@@ -105,7 +116,12 @@ const MODE_STRATEGIES = {
     handleKey: (key, state, canvas) => {
       const lane = HACKER_KEYS.indexOf(key);
       if (lane === -1) return state;
-      if (!state.gameStarted) { state.gameStarted = true; state.startTime = performance.now(); audioEngine.init(); return state; }
+      if (!state.gameStarted) { 
+        state.gameStarted = true; state.startTime = performance.now(); 
+        audioEngine.init(); 
+        audioEngine.startBGM('HACKER');
+        return state; 
+      }
       const hitZoneY = canvas.height - 120;
       const hitZoneHeight = 60;
       const hitItem = state.items.find(item => item.active && item.lane === lane && item.y + item.height > hitZoneY && item.y < hitZoneY + hitZoneHeight);
@@ -136,7 +152,10 @@ const MODE_STRATEGIES = {
         return item.active;
       });
       state.judgments = state.judgments.filter(j => { j.alpha -= 0.02; j.y -= 1; return j.alpha > 0; });
-      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) state.gameOver = true;
+      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) {
+        state.gameOver = true;
+        audioEngine.stopBGM();
+      }
       return state;
     },
     draw: (ctx, state, canvas) => {
@@ -151,7 +170,12 @@ const MODE_STRATEGIES = {
     handleKey: (key, state, canvas) => {
       const lane = HIGHWAY_KEYS.indexOf(key);
       if (lane === -1) return state;
-      if (!state.gameStarted) { state.gameStarted = true; state.startTime = performance.now(); audioEngine.init(); return state; }
+      if (!state.gameStarted) { 
+        state.gameStarted = true; state.startTime = performance.now(); 
+        audioEngine.init(); 
+        audioEngine.startBGM('HIGHWAY');
+        return state; 
+      }
       const hitItem = state.items.find(item => item.active && item.lane === lane && item.z > 0.8 && item.z < 1.15);
       if (hitItem) {
         hitItem.hit();
@@ -180,7 +204,10 @@ const MODE_STRATEGIES = {
         return item.active || item.sliced;
       });
       state.judgments = state.judgments.filter(j => { j.alpha -= 0.02; j.y -= 1; return j.alpha > 0; });
-      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) state.gameOver = true;
+      if (state.nextNoteIndex >= state.noteData.length && state.items.length === 0) {
+        state.gameOver = true;
+        audioEngine.stopBGM();
+      }
       return state;
     },
     draw: (ctx, state, canvas) => {
@@ -195,7 +222,12 @@ const MODE_STRATEGIES = {
     handleKey: (key, state, canvas) => {
       const lane = SAMURAI_KEYS.indexOf(key);
       if (lane === -1) return state;
-      if (!state.gameStarted) { state.gameStarted = true; state.startTime = performance.now(); audioEngine.init(); return state; }
+      if (!state.gameStarted) { 
+        state.gameStarted = true; state.startTime = performance.now(); 
+        audioEngine.init(); 
+        audioEngine.startBGM('SAMURAI');
+        return state; 
+      }
       const hitY = canvas.height * 0.75;
       const hitHeight = 60;
       const hitItem = state.items.find(item => item.active && item.lane === lane && item.y + item.height > hitY && item.y < hitY + hitHeight);
@@ -275,7 +307,11 @@ export default function GameEngine({ mode, onBack }) {
       rafRef.current = requestAnimationFrame(gameLoop);
     }
     
-    return () => { window.removeEventListener('keydown', handleKeyDown); cancelAnimationFrame(rafRef.current); };
+    return () => { 
+      window.removeEventListener('keydown', handleKeyDown); 
+      cancelAnimationFrame(rafRef.current);
+      audioEngine.stopBGM();
+    };
   }, [mode, handleKeyDown]);
 
   return (
