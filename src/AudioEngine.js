@@ -2,7 +2,7 @@ class AudioEngine {
   constructor() {
     this.ctx = null;
     this.masterGain = null;
-    this.bgmNodes = []; // Support multiple oscillators for "thick" sound
+    this.bgmNodes = []; 
     this.initialized = false;
     this.isPlaying = false;
   }
@@ -22,16 +22,13 @@ class AudioEngine {
     }
   }
 
-  // Dramatic Procedural BGM
   startBGM(mode) {
     if (!this.initialized) this.init();
     this.stopBGM();
-    
     const now = this.ctx.currentTime;
     const bgmGain = this.ctx.createGain();
     bgmGain.gain.value = 0.08; 
 
-    // Create 3 detuned oscillators for a dramatic "supersaw" or thick pad effect
     const createOsc = (freq, type, detune = 0) => {
       const osc = this.ctx.createOscillator();
       osc.type = type;
@@ -44,33 +41,26 @@ class AudioEngine {
 
     switch(mode) {
       case 'RAIN': 
-        // Eerie Dark Ambient: Deep low drone
         this.bgmNodes.push(createOsc(55, 'sine'));
         this.bgmNodes.push(createOsc(55.5, 'triangle', 10));
-        this.addLFO(bgmGain.gain, 0.5, 0.03); // Slow deep pulse
+        this.addLFO(bgmGain.gain, 0.5, 0.03); 
         break;
-
       case 'HACKER': 
-        // Industrial Tech: Aggressive square pulse
         this.bgmNodes.push(createOsc(40, 'square'));
         this.bgmNodes.push(createOsc(40.2, 'square', 15));
-        this.addLFO(bgmGain.gain, 4, 0.05); // Fast tense pulse
+        this.addLFO(bgmGain.gain, 4, 0.05); 
         break;
-
       case 'HIGHWAY': 
-        // High-Energy Synthwave: Epic driving bass
         this.bgmNodes.push(createOsc(80, 'sawtooth'));
         this.bgmNodes.push(createOsc(80.5, 'sawtooth', 20));
         this.bgmNodes.push(createOsc(160, 'sawtooth', -10));
-        this.addLFO(bgmGain.gain, 8, 0.04); // Rapid drive
+        this.addLFO(bgmGain.gain, 8, 0.04); 
         break;
-
       case 'SAMURAI': 
-        // Cinematic Tension: Low brassy triangle with high whistle
         this.bgmNodes.push(createOsc(45, 'sawtooth'));
         this.bgmNodes.push(createOsc(45.5, 'triangle', 15));
-        this.bgmNodes.push(createOsc(440, 'sine', 5)); // Eerie high note
-        this.addLFO(bgmGain.gain, 1.5, 0.06); // Unsteady tension
+        this.bgmNodes.push(createOsc(440, 'sine', 5)); 
+        this.addLFO(bgmGain.gain, 1.5, 0.06); 
         break;
     }
 
@@ -86,7 +76,7 @@ class AudioEngine {
     lfo.connect(lfoGain);
     lfoGain.connect(target);
     lfo.start();
-    this.bgmNodes.push(lfo); // Track LFOs so we can stop them
+    this.bgmNodes.push(lfo);
   }
 
   stopBGM() {
@@ -98,57 +88,103 @@ class AudioEngine {
     this.isPlaying = false;
   }
 
-  // Improved Dramatic Hit Sounds
+  // --- NEW ENHANCED HIT SOUNDS ---
+
+  // A crystal-clear "Ting" sound for Rain Tiles
   playRainPlink(lane) {
     if (!this.initialized) this.init();
     const now = this.ctx.currentTime;
+    const freqs = [523.25, 587.33, 659.25, 698.46]; // High C, D, E, F
+    
+    // Fundamental tone
     const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    const freqs = [220, 277.18, 329.63, 415.30]; // Minor 7th chord (A, C#, E, G#)
-    osc.frequency.setValueAtTime(freqs[lane] || 220, now);
     osc.type = 'sine';
-    gain.gain.setValueAtTime(0.5, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.frequency.setValueAtTime(freqs[lane], now);
+    
+    // Sharp attack component (the "click")
+    const click = this.ctx.createOscillator();
+    click.type = 'triangle';
+    click.frequency.setValueAtTime(freqs[lane] * 2, now);
+    
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.4, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    
     osc.connect(gain);
+    click.connect(gain);
     gain.connect(this.masterGain);
+    
     osc.start();
-    osc.stop(now + 0.3);
+    click.start();
+    osc.stop(now + 0.4);
+    click.stop(now + 0.1);
   }
 
+  // A clean, digital "Chime" for Hacker/Highway
   playSynthBeep(note = 0) {
     if (!this.initialized) this.init();
     const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.frequency.setValueAtTime(110 * Math.pow(2, note / 12), now);
-    osc.type = 'sawtooth';
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-    osc.start();
-    osc.stop(now + 0.15);
-  }
-
-  playHitSound() {
-    if (!this.initialized) this.init();
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const noise = this.ctx.createBufferSource();
-    const gain = this.ctx.createGain();
+    const freq = 440 * Math.pow(2, note / 12);
     
-    // Impact sound: low thud + short triangle
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-    osc.type = 'triangle';
+    const osc = this.ctx.createOscillator();
+    osc.type = 'triangle'; // Softer than sawtooth
+    osc.frequency.setValueAtTime(freq, now);
     
-    gain.gain.setValueAtTime(0.6, now);
+    const sub = this.ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(freq / 2, now);
+    
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
     
     osc.connect(gain);
+    sub.connect(gain);
     gain.connect(this.masterGain);
+    
     osc.start();
+    sub.start();
     osc.stop(now + 0.2);
+    sub.stop(now + 0.2);
+  }
+
+  // A satisfying "Slash/Impact" for Samurai
+  playHitSound() {
+    if (!this.initialized) this.init();
+    const now = this.ctx.currentTime;
+    
+    // White noise for the "brush/slash" effect
+    const bufferSize = this.ctx.sampleRate * 0.1;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.2, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    
+    // Low punchy sine sweep
+    const punch = this.ctx.createOscillator();
+    punch.frequency.setValueAtTime(200, now);
+    punch.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+    
+    const punchGain = this.ctx.createGain();
+    punchGain.gain.setValueAtTime(0.5, now);
+    punchGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    
+    noise.connect(noiseGain);
+    noiseGain.connect(this.masterGain);
+    punch.connect(punchGain);
+    punchGain.connect(this.masterGain);
+    
+    noise.start();
+    punch.start();
+    noise.stop(now + 0.1);
+    punch.stop(now + 0.15);
   }
 
   setVolume(val) {
