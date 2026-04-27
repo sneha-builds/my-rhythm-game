@@ -1,4 +1,7 @@
-# my-rhythm-game (Rhythmverse)
+# my-rhythm-game
+# DEMO
+<img width="1918" height="1352" alt="game" src="https://github.com/user-attachments/assets/920c5076-9bbc-4d21-87db-c9524e6c9b04" />
+
 ### A Modular Multi-Sensory Rhythm Game Engine
 
 **my-rhythm-game** is a high-performance, browser-based rhythm game platform built with **React** and **HTML5 Canvas**. Designed with a "Core Engine, Multiple Skins" philosophy, it decouples rhythm logic from visual rendering, allowing for vastly different aesthetic experiences (Rain, Cyber, Samurai, Synthwave) powered by the same underlying precision engine.
@@ -67,10 +70,9 @@ Controls are mapped to a standard 4-lane setup:
 
 ## Roadmap
 - [x] **Rainmaker Mode:** Zen/Ambient lo-fi mode.
-- [ ] **Cyber Hacker:** Matrix-style falling code snippets.
-- [ ] **Neon Highway:** 3D perspective synthwave driving mode.
-- [ ] **Samurai Slash:** Horizontal silhouette combat rhythm.
-- [ ] **Custom MIDI Support:** Allow users to upload `.mid` files to generate custom levels.
+- [x] **Cyber Hacker:** Matrix-style falling code snippets.
+- [x] **Neon Highway:** 3D perspective synthwave driving mode.
+- [x] **Samurai Slash:** Horizontal silhouette combat rhythm.
 
 ## Contributing
 Feel free to fork this repo and submit Pull Requests for new "Skins" or audio improvements. Let's build the ultimate web rhythm experience together!
