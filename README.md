@@ -1,10 +1,10 @@
-# my-rhythm-game
+# my-rhythm-game 
 # DEMO
 <img width="1918" height="1352" alt="game" src="https://github.com/user-attachments/assets/920c5076-9bbc-4d21-87db-c9524e6c9b04" />
 
 ### A Modular Multi-Sensory Rhythm Game Engine
 
-**my-rhythm-game** is a high-performance, browser-based rhythm game platform built with **React** and **HTML5 Canvas**. Designed with a "Core Engine, Multiple Skins" philosophy, it decouples rhythm logic from visual rendering, allowing for vastly different aesthetic experiences (Rain, Cyber, Samurai, Synthwave) powered by the same underlying precision engine.
+**my-rhythm-game** - This is a high-performance, browser-based rhythm game platform built with **React** and **HTML5 Canvas** and i built it just for learning purpose. Designed with a "Core Engine, Multiple Skins" philosophy, it decouples rhythm logic from visual rendering, allowing for vastly different aesthetic experiences (Rain, Cyber, Samurai, Synthwave) powered by the same underlying precision engine.
 
 ## Overview
 Unlike traditional web-based games that rely on moving DOM elements, RhythmVerse uses a custom-built **Canvas Engine** to ensure 60FPS performance and a **Web Audio API** controller for zero-latency sound synthesis. 
