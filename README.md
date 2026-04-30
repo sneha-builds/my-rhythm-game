@@ -15,7 +15,7 @@ The current version features the **Rainmaker** mode—a zen-like experience wher
 * **Modular Game Engine:** A centralized logic controller manages timing, hit-windows, and score state independent of the visual theme.
 * **Zero-Latency Audio:** Programmatic sound synthesis via Web Audio API ensures audio-visual synchronization without the lag of traditional HTML5 audio tags.
 * **Adaptive Theming:** Full support for System Light/Dark modes. Canvas colors and UI elements update dynamically via CSS variables.
-* **Multi-Mode Lobby:** A professional navigation interface to toggle between four distinct gameplay universes.
+* **Multi-Mode Lobby:** A professional navigation interface to toggle between four distinct gameplay universes.  
 
 ## Tech Stack
 * **Framework:** React 18+ (Vite)
